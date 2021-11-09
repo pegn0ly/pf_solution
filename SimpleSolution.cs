@@ -26,9 +26,45 @@ class SimpleSolution
 		Console.WriteLine("Enter destination coords: ");
 		int dx = Convert.ToInt32(Console.ReadLine());
 		int dy = Convert.ToInt32(Console.ReadLine());
-		//
-		ArrayList PossiblePoints = GetReachablePointsFromThis(arr, width, height, width * sx + sy);
-		DrawField(arr, width, height, PossiblePoints);
+		int dest_point = width * dx + dy;
+		// массив уже проверенных точек
+		ArrayList CheckedPoints = new ArrayList();
+		// непосредственно поиск
+		while(ReachablePoints.Count != 0)
+		{
+			// выбрать первую точку из достижимых
+			int point = Convert.ToInt32(ReachablePoints[0]);
+			// добавить ее в массив проверенных и убрать из массива достижимых
+			CheckedPoints.Add(point);
+			ReachablePoints.Remove(point);
+			// найти точки, достижимые из выбранной
+			ArrayList PossiblePoints = GetReachablePointsFromThis(arr, width, height, point, CheckedPoints);
+			// если таких точек нет, проверяем следующую
+			if(PossiblePoints.Count == 0)
+			{
+				continue;
+			}
+			// если среди них есть конечная - завершить алгоритм
+			else if(PossiblePoints.Contains(dest_point))
+			{
+				Console.WriteLine("Done!");
+				break;
+			}
+			// иначе добавить все найденные точки в массив достижимых для дальнейшей проверки
+			else
+			{
+				DrawField(arr, width, height, PossiblePoints);
+				Console.WriteLine();
+				foreach (int pp in PossiblePoints) 
+				{
+					if(ReachablePoints.Contains(pp) == false)
+					{
+						ReachablePoints.Add(pp);
+					}
+				}
+			}
+		}
+		//Console.WriteLine("Path not found");
 	}
 
 	static void Swap(int x, int y)
@@ -79,7 +115,7 @@ class SimpleSolution
 	}
 
 	// получает точки, достижимые из заданной
-	static ArrayList GetReachablePointsFromThis(int[] field, int width, int height, int point)
+	static ArrayList GetReachablePointsFromThis(int[] field, int width, int height, int point, ArrayList checked_points)
 	{
 		ArrayList Answer = new ArrayList();
 		// восстановить координаты точки, чтобы найти координаты, по которым будут находиться соседние точки
@@ -91,8 +127,8 @@ class SimpleSolution
 			for(int j = py - 1; j <= py + 1; j++)
 			{
 				int possible_point = width * i + j;
-				// проверяемые точки не должны выходить за пределы поля. Также отбрасываются непроходимые точки.
-				if(possible_point >= 0 && possible_point < (width * height) && field[possible_point] != 1)
+				// проверяемые точки не должны выходить за пределы поля. Также отбрасываются непроходимые и уже пройденные точки.
+				if(possible_point >= 0 && possible_point < (width * height) && field[possible_point] != 1 && checked_points.Contains(possible_point) == false)
 				{
 					Answer.Add(possible_point);
 				}
